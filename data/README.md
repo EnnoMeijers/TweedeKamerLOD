@@ -1,0 +1,1 @@
+In this directory the download and generated files are stored.
