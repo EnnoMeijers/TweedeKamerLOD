@@ -1,0 +1,159 @@
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX schema: <http://schema.org/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX tkp: <https://example.org/persoon/>
+PREFIX tko: <https://example.org/ontology/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX pav: <http://purl.org/pav/>
+
+CONSTRUCT {
+
+  ?uri_def a tko:Persoon, schema:Person;
+      rdfs:label ?naam;
+      schema:name ?naam; # schema:Thing
+      schema:familyName ?volledige_achternaam;
+      schema:givenName ?voornaam_compleet;
+      schema:honorificPrefix ?titels;
+      schema:jobTitle ?functie;
+      schema:birthDate ?geboortedatum;
+      schema:birthPlace ?uri_gebplaats; 
+      schema:deathDate ?overlijdensdatum;
+      schema:deathPlace ?uri_ovplaats;
+      schema:homeLocation ?uri_woonplaats;
+      schema:gender ?geslacht;
+      schema:nationality ?land;
+      schema:identifier ?id; #schema:Thing
+      schema:image [ schema:contentUrl ?imageUrl; schema:encodingFormat ?contenttype; schema:contentSize ?contentlength ] . #schema:Thing
+
+?uri_ovplaats a schema:Place;
+  rdfs:label ?overlijdensplaats;
+  schema:address [
+    a schema:PostalAddress;
+    schema:addressLocality ?overlijdensplaats
+  ].
+
+?uri_gebplaats a schema:Place;
+  rdfs:label ?geboorteplaats;
+  schema:address [
+    a schema:PostalAddress;
+    schema:addressCountry ?geboorteland;
+    schema:addressLocality ?geboorteplaats
+  ].
+
+?uri_woonplaats a schema:Place;
+  rdfs:label ?woonplaats;
+  schema:address [
+    a schema:PostalAddress;
+    schema:addressLocality ?woonplaats
+  ].
+
+# start with recording some provenance attributes, probably needs more work 
+# at a later stage f.g. extensions or recording at dataset level
+?uri_prov a prov:Entity ;
+    pav:importedFrom ?endpoint ;
+    pav:retrievedOn ?now; # assuming download and transform are part of the same process
+    pav:lastUpdateOn ?dateModified .
+
+}
+WHERE {
+  ?uri a tkp:Persoon ;
+      # note that these following fields are required
+      # source uri's without these are skipped
+      tkp:id ?id;
+      tkp:achternaam ?achternaam.
+
+  # define the URI for the resulting resource    
+  BIND( CONCAT( "BASE_URI","persoon/",?id ) as ?base_uri )
+  BIND( IRI( ?base_uri ) as ?uri_def)
+
+  # define the ODATA-API endpoint URL
+  BIND( CONCAT( "API_URL", "Persoon" ) as ?endpoint )
+
+  # collect some optional attributes
+  OPTIONAL { ?uri tkp:voornamen ?voornamen }
+  OPTIONAL { ?uri tkp:roepnaam ?roepnaam }
+  OPTIONAL { ?uri tkp:initialen ?initialen }
+  OPTIONAL { ?uri tkp:tussenvoegsel ?tussenvoegsel }
+  OPTIONAL { ?uri tkp:titels ?titels }
+  OPTIONAL { ?uri tkp:functie ?functie }
+  OPTIONAL { ?uri tkp:geslacht ?geslacht }
+  OPTIONAL { ?uri tkp:land ?land }
+  OPTIONAL { ?uri tkp:woonplaats ?woonplaats }
+
+  # gather data about birtdate and place
+  OPTIONAL { 
+    ?uri tkp:geboortedatum ?gdatum
+    # set datatype to xsd:date
+    BIND( STRDT( ?gdatum, xsd:dateTime ) as ?geboortedatum )
+  }
+  OPTIONAL { ?uri tkp:geboorteplaats ?geboorteplaats }
+  OPTIONAL { ?uri tkp:geboorteland ?geboorteland }
+
+  # gater data about deathdata and place
+  OPTIONAL { 
+    ?uri tkp:overlijdensdatum ?odatum
+    # set datatype to xsd:date
+    BIND( STRDT( ?odatum , xsd:dateTime ) as ?overlijdensdatum )
+  }
+  OPTIONAL { 
+    ?uri tkp:overlijdensplaats ?overlijdensplaats 
+  }
+
+  # only set the ?uri_ovplaats if ?overlijdensplaats has a value  
+  BIND( IF( BOUND( ?tussenvoegsel ),CONCAT( ?tussenvoegsel," ",?achternaam ),?achternaam ) as ?volledige_achternaam ) 
+
+  # only set the ?uri_woonplaats if ?woonplaats has a value  
+  BIND( COALESCE( 
+    IF( BOUND( ?woonplaats ), IRI( CONCAT( ?base_uri,"#woonplaats" ) ), 1/0 ) 
+  ) as ?uri_woonplaats )
+  
+  # only set the ?uri_gebplaats if ?geboorteplaats has a value
+  BIND( COALESCE( 
+    IF( BOUND( ?geboorteplaats ), IRI( CONCAT( ?base_uri,"#gebplaats" ) ), 1/0 ) 
+  ) as ?uri_gebplaats )
+  
+  # only set the ?uri_ovplaats if ?overlijdensplaats has a value  
+  BIND(COALESCE( 
+    IF( BOUND( ?overlijdensplaats ),IRI( CONCAT( ?base_uri,"#ovplaats" ) ), 1/0 ) 
+  ) as ?uri_ovplaats )
+  
+  # build a link to an image if provided
+  OPTIONAL { 
+    ?uri tkp:contentlength ?contentlength .
+  }
+  OPTIONAL { ?uri tkp:contenttype ?contenttype }
+
+  # images are available through the api, so build the 'imageUrl' property
+  BIND( COALESCE(
+    IF( BOUND( ?contentlength ), URI( CONCAT( ?endpoint,"(",?id,")","/resource" ) ) ,1/0 )
+  ) as ?imageUrl )
+
+  # 'roepnaam' has no equivalent in Schema.org
+  # create 'naam' to be used a title/label
+  BIND(COALESCE(
+    IF(BOUND(?roepnaam),CONCAT(?roepnaam," ",?volledige_achternaam),1/0),
+    IF(BOUND(?voornamen),CONCAT(?voornamen," ",?volledige_achternaam),1/0),
+    IF(BOUND(?initialen),CONCAT(?initialen," ",?volledige_achternaam),?volledige_achternaam)
+  ) as ?naam)
+
+  # 'initialen' has no equivalent in Schema.org, so added to schema.org/givenName
+  BIND(COALESCE(
+    IF(BOUND(?voornamen)&&BOUND(?initialen),CONCAT(?voornamen," (",?initialen,")"),1/0),
+    IF(BOUND(?voornamen),?voornamen,1/0),
+    IF(BOUND(?initialen),?initialen,1/0)
+  ) as ?voornaam_compleet)
+
+  BIND( IRI( CONCAT( ?base_uri,"#prov" ) ) as ?uri_prov )
+
+  ?uri tkp:apigewijzigdop ?gewijzigdop .
+  # set datatype to xsd:date
+  BIND( STRDT( ?gewijzigdop, xsd:dateTime ) as ?dateModified )
+
+  # create a timpestamp for provenance information
+  BIND( NOW() as ?now )
+
+  # ignored properties for now:
+  #  tkp:nummer;
+  #  tkp:gewijzigdop (apigewijzigd seems more relevant to use instead)
+  #  tkp:verwijderd
+}

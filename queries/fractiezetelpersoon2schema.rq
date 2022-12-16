@@ -1,0 +1,72 @@
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX schema: <http://schema.org/>
+PREFIX tko: <https://example.org/ontology/> # placeholder - will be replaced during processing
+PREFIX tkfz: <https://example.org/fractiezetel/> # placeholder - will be replaced during processing
+PREFIX tkfzp: <https://example.org/fractiezetelpersoon/> # placeholder - will be replaced during processing
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX pav: <http://purl.org/pav/>
+
+CONSTRUCT {
+
+  ?uri_fractielid 
+      a schema:OrganizationRole ;
+      schema:memberOf ?uri_fractie ;
+      schema:startDate ?van ;
+      schema:endDate ?totenmet ;
+      schema:member ?uri_persoon ;
+      schema:roleName ?functie .
+
+   # start with recording some provenance attributes, probably needs more work 
+   # at a later stage f.g. extensions or recording at dataset level
+   ?uri_prov a prov:Entity ;
+      pav:importedFrom ?endpoint1 ;
+      pav:importedFrom ?endpoint2 ;
+      pav:retrievedOn ?now; # assuming download and transform are part of the same process
+      pav:lastUpdateOn ?dateModified .  
+
+}
+WHERE {
+   ?uri_fzp a tkfzp:FractieZetelPersoon ;
+      tkfzp:id ?fractiezetelpersoon_id;
+      tkfzp:fractiezetel_id ?fractiezetel_id ;
+      tkfzp:persoon_id ?persoon_id;
+      tkfzp:functie ?functie;
+      tkfzp:van ?vanstr.
+
+   ?uri_fz a tkfz:FractieZetel ;
+      tkfz:id ?fractiezetel_id;
+      tkfz:fractie_id ?fractie_id .
+  
+   # set datatype to xsd:dateTime
+   BIND( STRDT( ?vanstr , xsd:dateTime ) as ?van )
+
+   OPTIONAL {
+      ?uri_fzp tkfzp:totenmet ?totenmetString
+      # set datatype to xsd:dateTime
+      BIND( STRDT( ?totenmetString , xsd:dateTime ) as ?totenmet )
+   }
+
+  # define the ODATA-API endpoint URL
+  BIND( CONCAT( "API_URL", "FractieZetel" ) as ?endpoint1 )
+  BIND( CONCAT( "API_URL", "FractieZetelPersoon" ) as ?endpoint2 )
+  
+  BIND( IRI( CONCAT( "BASE_URI","fractie/",?fractie_id ) ) as ?uri_fractie )
+
+  BIND( IRI( CONCAT( "BASE_URI","persoon/",?persoon_id ) ) as ?uri_persoon )
+
+  BIND( IRI( CONCAT( "BASE_URI","fractiezetel/",?fractiezetelpersoon_id ) ) as ?uri_fractielid )
+
+  # create an URI for the prov:Entity
+  BIND( IRI( CONCAT( "BASE_URI","fractiezetel/",?fractiezetelpersoon_id,"#prov" ) ) as ?uri_prov )
+
+  ?uri_fzp tkfzp:apigewijzigdop ?gewijzigdop .
+  # set datatype to xsd:dateTime
+  BIND( STRDT( ?gewijzigdop, xsd:dateTime ) as ?dateModified )
+
+  # create a timpestamp for provenance information
+  BIND( NOW() as ?now )
+
+  # ignored properties for now:
+  #  tkfzp:verwijderd
+  
+}

@@ -1,0 +1,94 @@
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX schema: <http://schema.org/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX tkf: <https://example.org/fractie/>
+PREFIX tko: <https://example.org/ontology/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX pav: <http://purl.org/pav/>
+
+
+CONSTRUCT {
+  ?uri_def a tko:Fractie, schema:Organization;
+      rdfs:label ?naam;
+      schema:name ?naam; # schema:Thing
+      schema:description ?descriptionNL,?descriptionEN; # schema:Thing
+      schema:identifier ?id; #schema:Thing
+      schema:foundingDate ?datumactief;
+      schema:dissolutionDate ?datuminactief;
+      schema:numberOfEmployees ?aantalzetels; # not a perfect match but no better schema property currently
+      schema:upvoteCount ?aantalstemmen; #schema:Comment
+      schema:image [ schema:contentUrl ?imageUrl; schema:encodingFormat ?contenttype; schema:contentSize ?contentlength ].  #schema:Thing
+
+# start with recording some provenance attributes, probably needs more work 
+# at a later stage f.g. extensions or recording at dataset level
+?uri_prov a prov:Entity ;
+    pav:importedFrom ?endpoint ;
+    pav:retrievedOn ?now; # assuming download and transform are part of the same process
+    pav:lastUpdateOn ?dateModified .
+
+}
+WHERE {
+  ?uri a tkf:Fractie ;
+      tkf:id ?id;
+      tkf:afkorting ?afkorting;
+      tkf:naamnl ?naamNL .
+
+  BIND( STRLANG( ?afkorting,"nl" ) as ?naam )
+  
+  # assign language tags to the different variants of the name
+  # and store them in the description field 
+  BIND( STRLANG( ?naamNL,"nl" ) as ?descriptionNL )
+
+  OPTIONAL {
+    ?uri tkf:naamen ?naamEN 
+    BIND( STRLANG( ?naamEN,"en" ) as ?descriptionEN )
+  }
+  
+  # define the URI for the resulting resource    
+  BIND( CONCAT( "BASE_URI","fractie/",?id ) as ?base_uri)
+  BIND( IRI( ?base_uri ) as ?uri_def)
+
+  # define the ODATA-API endpoint URL
+  BIND( CONCAT( "API_URL", "Fractie" ) as ?endpoint )
+
+  OPTIONAL { ?uri tkf:datumactief ?dactief 
+    BIND( STRDT( ?dactief, xsd:dateTime ) as ?datumactief ) 
+  }
+
+  OPTIONAL { ?uri tkf:datuminactief ?dinactief 
+      BIND( STRDT( ?dinactief, xsd:dateTime ) as ?datuminactief ) 
+  }
+
+  OPTIONAL { 
+    ?uri tkf:aantalzetels ?zetels
+    BIND( STRDT( ?zetels, xsd:integer ) as ?aantalzetels) 
+  }
+
+  OPTIONAL { 
+    ?uri tkf:aantalstemmen ?stemmen
+    BIND( STRDT( ?stemmen, xsd:integer ) as ?aantalstemmen)  
+  }
+
+  OPTIONAL { ?uri tkf:contentlength ?contentlength }
+
+  OPTIONAL { ?uri tkf:contenttype ?contenttype }
+
+  # images are available through the api, so build the 'imageUrl' property
+  BIND( COALESCE(
+    IF( BOUND( ?contentlength ), URI( CONCAT( ?endpoint,"(",?id,")","/resource" ) ) ,1/0 )
+  ) as ?imageUrl )
+  
+  # create an URI for the prov:Entity
+  BIND( IRI( CONCAT( ?base_uri,"#prov" ) ) as ?uri_prov )
+
+  ?uri tkf:apigewijzigdop ?gewijzigdop .
+  # set datatype to xsd:date
+  BIND( STRDT( ?gewijzigdop, xsd:dateTime ) as ?dateModified )
+
+  # create a timpestamp for provenance information
+  BIND( NOW() as ?now )
+
+  # ignored properties for now:
+  #  tkf:nummer;
+  #  tkf:verwijderd
+}

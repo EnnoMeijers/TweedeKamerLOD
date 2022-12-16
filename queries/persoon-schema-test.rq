@@ -1,0 +1,23 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX schema: <http://schema.org/>
+
+select ?naam ?voornamen ?achternaam ?functie ?afbeelding ?woonplaats ?nationaliteit ?geslacht ?geboortedatum ?geboorteland ?geboorteplaats ?overlijdensdatum ?overlijdensplaats ?gebstr ?widget {
+ ?uri_persoon a schema:Person ;
+  schema:identifier ?id ;
+  schema:name ?naam .
+  OPTIONAL { ?uri_persoon schema:givenName ?voornamen }
+  OPTIONAL { ?uri_persoon schema:familyName ?achternaam }
+  OPTIONAL { ?uri_persoon schema:jobTitle ?functie }
+  OPTIONAL { ?uri_persoon schema:birthDate ?geboortedatum }
+  OPTIONAL { ?uri_persoon schema:deathDate ?overlijdensdatum }
+  OPTIONAL { ?uri_persoon schema:homeLocation/schema:address/schema:addressLocality ?woonplaats }
+  OPTIONAL { ?uri_persoon schema:birthPlace/schema:address/schema:addressLocality ?geboorteplaats }
+  OPTIONAL { ?uri_persoon schema:birthPlace/schema:address/schema:addressCountry ?geboorteland }
+  OPTIONAL { ?uri_persoon schema:deathPlace/schema:address/schema:addressLocality ?overlijdensplaats }
+  OPTIONAL { ?uri_persoon schema:gender ?geslacht }
+  OPTIONAL { ?uri_persoon schema:nationality ?nationaliteit }
+  OPTIONAL { ?uri_persoon schema:image/schema:contentUrl ?afbeelding }
+  BIND(IF(BOUND(?geboortedatum),CONCAT(DAY(?geboortedatum),"-",MONTH(?geboortedatum),"-",YEAR(?geboortedatum)),"") as ?gebstr)
+  BIND(IF(BOUND(?afbeelding),'''<h2>{{naam}}</h2><br>geb: {{gebstr}}</br><br><img src="{{afbeelding}}" height=150px><br>'''^^rdf:HTML,'''<h2>{{naam}}</h2><br>geb: {{gebstr}}</br>'''^^rdf:HTML) as ?widget)
+  #filter(?id = "edefa48b-f14e-4ec3-ab3c-dfe2aa0126ec")
+} order by ?achternaam ?geboortedatum

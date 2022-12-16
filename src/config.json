@@ -1,0 +1,47 @@
+{
+  "odataApi": "https://gegevensmagazijn.tweedekamer.nl/OData/v4/2.0/",
+  "ontology": "https://gegevensmagazijn.tweedekamer.nl/ontology/",
+  "baseUri": "https://data.netwerkdigitaalerfgoed.nl/nde/tweedekamer/",
+  "downloadAndMap": [
+    {
+      "endpoint": "Persoon",
+      "download": "./data/persoon.json",
+      "output": "./data/persoon.nt"
+    },
+    {
+      "endpoint": "Fractie",
+      "download": "./data/fractie.json",
+      "output": "./data/fractie.nt"
+    },
+    {
+      "endpoint": "FractieZetel",
+      "download": "./data/fractiezetel.json",
+      "output": "./data/fractiezetel.nt"
+    },
+    {
+      "endpoint": "FractieZetelPersoon",
+      "download": "./data/fractiezetelpersoon.json",
+      "output": "./data/fractiezetelpersoon.nt"
+    }
+  ],
+  "transform": [
+    {
+      "skip": false,
+      "query": "./queries/persoon2schema.rq",
+      "sources": "./data/persoon.nt",
+      "output": "./data/persoon-schema.ttl"
+    },
+    {
+      "skip": false,
+      "query": "./queries/fractie2schema.rq",
+      "sources": "./data/fractie.nt",
+      "output": "./data/fractie-schema.ttl"
+    },
+    {
+      "skip": false,
+      "query": "./queries/fractiezetelpersoon2schema.rq",
+      "sources": "./data/fractiezetel.nt,./data/fractiezetelpersoon.nt",
+      "output": "./data/fractiezetelpersoon-schema.ttl"
+    }
+  ]
+}

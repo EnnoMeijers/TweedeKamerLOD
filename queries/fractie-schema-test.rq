@@ -1,0 +1,20 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX schema: <http://schema.org/>
+
+select ?naam ?aantalzetels ?omschrijving (STR(?aantalstemmen) as ?stemmen) ?datumactief ?datuminactief ?widget {
+ ?uri_fractie a schema:Organization ;
+  schema:identifier ?id ;
+  schema:name ?naam .
+  OPTIONAL { 
+    ?uri_fractie schema:description ?omschrijving
+    FILTER(LANG(?omschrijving)="nl")
+  }
+  OPTIONAL { ?uri_fractie schema:numberOfEmployees ?aantalzetels }
+  OPTIONAL { ?uri_fractie schema:upvoteCount ?aantalstemmen }
+  OPTIONAL { ?uri_fractie schema:foundingDate ?datumactief }
+  OPTIONAL { ?uri_fractie schema:dissolutionDate ?datuminactief }
+  OPTIONAL { ?uri_fractie schema:image/schema:contentUrl ?afbeelding }
+  BIND(IF(BOUND(?geboortedatum),CONCAT(DAY(?geboortedatum),"-",MONTH(?geboortedatum),"-",YEAR(?geboortedatum)),"") as ?gebstr)
+  BIND(IF(BOUND(?afbeelding),'''<h2>{{naam}}</h2><br>geb: {{gebstr}}</br><br><img src="{{afbeelding}}" height=150px><br>'''^^rdf:HTML,'''<h2>{{naam}}</h2><br>geb: {{gebstr}}</br>'''^^rdf:HTML) as ?widget)
+  FILTER(?aantalzetels != 0)
+} order by ?aantalzetels

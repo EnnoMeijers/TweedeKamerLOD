@@ -1,0 +1,36 @@
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX schema: <http://schema.org/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX schema: <http://schema.org/>
+
+select ?naam ?fractienaam ?functie ?geboortedatum ?van ?totenmet {
+
+?persoon schema:name ?naam .
+
+?fractielid schema:member ?persoon ;
+  schema:memberOf ?fractie ;
+  schema:startDate ?startDate ;
+  schema:roleName ?functie .
+
+BIND( IF( DATATYPE( ?startDate ) = xsd:dateTime , 
+  CONCAT( DAY( ?startDate ),"/",MONTH( ?startDate ),"/",YEAR( ?startDate ) ),
+  ?startDate ) as ?van )
+
+OPTIONAL {
+  ?fractielid schema:endDate ?endDate 
+  BIND( IF( DATATYPE( ?endDate ) = xsd:dateTime , 
+      CONCAT( DAY( ?endDate ),"/",MONTH( ?endDate ),"/",YEAR( ?endDate ) ),
+      ?endDate ) as ?totenmet )
+}
+?fractie schema:name ?fractienaam .
+
+OPTIONAL {
+  ?persoon schema:birthDate ?birthDate 
+  BIND( IF( DATATYPE( ?birthDate ) = xsd:dateTime , 
+      CONCAT( DAY( ?birthDate ),"/",MONTH( ?birthDate ),"/",YEAR( ?birthDate ) ),
+      ?birthDate ) as ?geboortedatum )
+}
+  
+#FILTER(?fractienaam="PvdD"@nl)
+#FILTER(?naam="Femke Merel van Kooten-Arissen")
+} ORDER BY ?naam ?startDate
