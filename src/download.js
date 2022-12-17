@@ -9,6 +9,10 @@ const config = JSON.parse( fs.readFileSync('./src/config.json') );
 // Simple download function that loops through the
 // 'next' links to collect all the data from and endpoint
 async function downloadEndpoint( dataset ) {
+  if(dataset.skip){
+    console.log(`Skipped ${dataset.endpoint}`)
+    return
+  }
   const odataApi = config.odataApi;
   const endpoint = odataApi + dataset.endpoint;
   const outputfile = dataset.download;
@@ -21,6 +25,7 @@ async function downloadEndpoint( dataset ) {
         const data = await result.data.value;
         url = result.data['@odata.nextLink']
         records.push(...data);
+        console.log(".")
       })
       .catch(function (error) {
           console.log(error.code);

@@ -1,9 +1,9 @@
 {
-  "name": "tk-odata",
+  "name": "tweedekamerlod",
   "version": "1.0.0",
   "description": "Tweede Kamer Linked Data",
   "scripts": {
-    "start": "node src/main.js"
+    "start": "node --max-old-space-size=8192 src/main.js"
   },
   "author": "Enno Meijers",
   "license": "EUPL",

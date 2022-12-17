@@ -4,27 +4,8 @@
   "baseUri": "https://data.netwerkdigitaalerfgoed.nl/nde/tweedekamer/",
   "downloadAndMap": [
     {
-      "endpoint": "Persoon",
-      "download": "./data/persoon.json",
-      "output": "./data/persoon.nt"
-    },
-    {
-      "endpoint": "Fractie",
-      "download": "./data/fractie.json",
-      "output": "./data/fractie.nt"
-    },
-    {
-      "endpoint": "FractieZetel",
-      "download": "./data/fractiezetel.json",
-      "output": "./data/fractiezetel.nt"
-    },
-    {
-      "endpoint": "FractieZetelPersoon",
-      "download": "./data/fractiezetelpersoon.json",
-      "output": "./data/fractiezetelpersoon.nt"
-    },
-    {
       "endpoint": "Stemming",
+      "primarykey": "Id",
       "download": "./data/stemming.json",
       "output": "./data/stemming.nt"
     }
