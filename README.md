@@ -22,6 +22,6 @@ $ npm start
 
 ## Configuration
 
-To configure the download and transformation of specific datasets is done in the [configuration file](./src/config.js). 
+To configure the download and transformation of specific datasets is done in the [configuration file](https://github.com/EnnoMeijers/TweedeKamerLOD/blob/master/src/config.json). 
 
 
