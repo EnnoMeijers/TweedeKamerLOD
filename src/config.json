@@ -2,51 +2,50 @@
   "odataApi": "https://gegevensmagazijn.tweedekamer.nl/OData/v4/2.0/",
   "ontology": "https://gegevensmagazijn.tweedekamer.nl/ontology/",
   "baseUri": "https://data.netwerkdigitaalerfgoed.nl/nde/tweedekamer/",
+  "maxDownloadPages": 500,
+  "datadir": "./data/",
   "downloadAndMap": [
-    {
-      "endpoint": "Persoon",
-      "download": "./data/persoon.json",
-      "output": "./data/persoon.nt"
-    },
-    {
-      "endpoint": "Fractie",
-      "download": "./data/fractie.json",
-      "output": "./data/fractie.nt"
-    },
-    {
-      "endpoint": "FractieZetel",
-      "download": "./data/fractiezetel.json",
-      "output": "./data/fractiezetel.nt"
-    },
-    {
-      "endpoint": "FractieZetelPersoon",
-      "download": "./data/fractiezetelpersoon.json",
-      "output": "./data/fractiezetelpersoon.nt"
-    },
-    {
-      "endpoint": "Stemming",
-      "download": "./data/stemming.json",
-      "output": "./data/stemming.nt"
-    }
+    { "skip": false, "endpoint": "Persoon", "primarykey": "Id" },
+    { "skip": false, "endpoint": "Fractie", "primarykey": "Id" },
+    { "skip": false, "endpoint": "FractieZetel", "primarykey": "Id" },
+    { "skip": false, "endpoint": "FractieZetelPersoon", "primarykey": "Id" },
+    { "skip": false, "endpoint": "Stemming", "primarykey": "Id" },
+    { "skip": false, "endpoint": "Besluit", "primarykey": "Id", "parameters": "$expand=Zaak($select=Id,Onderwerp)" },
+    { "skip": false, "endpoint": "Agendapunt", "primarykey": "Id", "parameters": "$expand=Activiteit($select=Datum)" },
+    { "skip": false, "endpoint": "Activiteit", "primarykey": "Id" }
   ],
   "transform": [
     {
+      "endpoint": "Persoon",
       "skip": false,
-      "query": "./queries/persoon2schema.rq",
-      "sources": "./data/persoon.nt",
-      "output": "./data/persoon-schema.ttl"
+      "query": "./queries/persoon2schema.rq"
     },
     {
+      "endpoint": "Fractie",
       "skip": false,
-      "query": "./queries/fractie2schema.rq",
-      "sources": "./data/fractie.nt",
-      "output": "./data/fractie-schema.ttl"
+      "query": "./queries/fractie2schema.rq"
     },
     {
+      "endpoint": "FractieZetelPersoon",
       "skip": false,
       "query": "./queries/fractiezetelpersoon2schema.rq",
-      "sources": "./data/fractiezetel.nt,./data/fractiezetelpersoon.nt",
+      "sources": "./data/fractiezetel0.nt,./data/fractiezetelpersoon0.nt",
       "output": "./data/fractiezetelpersoon-schema.ttl"
+    },
+    {
+      "endpoint": "Stemming",
+      "skip": false,
+      "query": "./queries/stemming2schema.rq"
+    },
+    {
+      "endpoint": "Besluit",
+      "skip": false,
+      "query": "./queries/besluit2schema.rq"
+    },
+    {
+      "endpoint": "Agendapunt",
+      "skip": false,
+      "query": "./queries/agendapunt2schema.rq"
     }
   ]
 }

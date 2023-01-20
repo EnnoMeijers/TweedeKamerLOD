@@ -1,8 +1,8 @@
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX schema: <http://schema.org/>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX tkp: <https://example.org/persoon/>
-PREFIX tko: <https://example.org/ontology/>
+PREFIX tkp: <http://example.org/persoon/>
+PREFIX tko: <http://example.org/ontology/>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX pav: <http://purl.org/pav/>
 
@@ -93,7 +93,7 @@ WHERE {
   OPTIONAL { 
     ?uri tkp:overlijdensdatum ?odatum
     # set datatype to xsd:date
-    BIND( STRDT( ?odatum , xsd:dateTime ) as ?overlijdensdatum )
+    BIND( STRDT( ?odatum , xsd:date ) as ?overlijdensdatum )
   }
   OPTIONAL { 
     ?uri tkp:overlijdensplaats ?overlijdensplaats 

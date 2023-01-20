@@ -1,0 +1,56 @@
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX schema: <http://schema.org/>
+PREFIX tks: <http://example.org/stemming/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX pav: <http://purl.org/pav/>
+
+CONSTRUCT {
+  ?uri_stemming a schema:VoteAction ;
+    schema:identifier ?id;
+    schema:agent ?uri_fractie;
+    schema:agent ?uri_persoon;
+    schema:object ?uri_besluit ;
+    schema:result ?stem;
+    schema:numberOfEmployees ?grootte.
+
+  # start with recording some provenance attributes, probably needs more work 
+  # at a later stage f.g. extensions or recording at dataset level
+  ?uri_prov a prov:Entity ;
+    pav:importedFrom ?endpoint ;
+    pav:retrievedOn ?now; # assuming download and transform are part of the same process
+    pav:lastUpdateOn ?dateModified . 
+}
+WHERE {
+  ?uri a tks:Stemming ;
+    tks:id ?id;
+    tks:besluit_id ?besluit_id ;
+    tks:soort ?stem .
+       
+  OPTIONAL {
+    ?uri tks:fractiegrootte ?grootte
+  }
+  OPTIONAL {
+    ?uri tks:fractie_id ?fractie_id
+  }
+  OPTIONAL {
+    ?uri tks:persoon_id ?persoon_id
+  }
+  BIND( IRI( CONCAT( "BASE_URI","stemming/",?id ) ) as ?uri_stemming )
+  BIND( IRI( CONCAT( "BASE_URI","fractie/",?fractie_id ) ) as ?uri_fractie )
+  BIND( IRI( CONCAT( "BASE_URI","persoon/",?persoon_id ) ) as ?uri_persoon )
+  BIND( IRI( CONCAT( "BASE_URI","besluit/",?besluit_id ) ) as ?uri_besluit )
+  # define the ODATA-API endpoint URL
+  BIND( CONCAT( "API_URL", "Stemming" ) as ?endpoint )
+
+  # create an URI for the prov:Entity
+  BIND( IRI( CONCAT( "BASE_URI","stemming/",?id,"#prov" ) ) as ?uri_prov )
+
+  ?uri tks:apigewijzigdop ?gewijzigdop .
+  # set datatype to xsd:dateTime
+  BIND( STRDT( ?gewijzigdop, xsd:dateTime ) as ?dateModified )
+
+  # create a timpestamp for provenance information
+  BIND( NOW() as ?now )
+
+  # TODO: list unused properties from raw data
+}

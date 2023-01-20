@@ -1,8 +1,8 @@
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX schema: <http://schema.org/>
 PREFIX tko: <https://example.org/ontology/> # placeholder - will be replaced during processing
-PREFIX tkfz: <https://example.org/fractiezetel/> # placeholder - will be replaced during processing
-PREFIX tkfzp: <https://example.org/fractiezetelpersoon/> # placeholder - will be replaced during processing
+PREFIX tkfz: <http://example.org/fractiezetel/> # placeholder - will be replaced during processing
+PREFIX tkfzp: <http://example.org/fractiezetelpersoon/> # placeholder - will be replaced during processing
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX pav: <http://purl.org/pav/>
 

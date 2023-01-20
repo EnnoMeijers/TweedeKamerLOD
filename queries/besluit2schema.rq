@@ -1,0 +1,57 @@
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX schema: <http://schema.org/>
+PREFIX tkb: <http://example.org/besluit/>
+PREFIX tkz: <http://example.org/zaak/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX pav: <http://purl.org/pav/>
+
+CONSTRUCT {
+  ?uri_besluit a schema:Action ;
+    schema:identifier ?id ;
+    schema:name ?besluitsoort ;
+    schema:result ?besluittekst ;
+    schema:object ?uri_zaak ;
+    schema:target ?uri_agendapunt ;
+    schema:description ?zaak_onderwerp ;
+    schema:actionStatus ?status .
+
+  # start with recording some provenance attributes, probably needs more work 
+  # at a later stage f.g. extensions or recording at dataset level
+  ?uri_prov a prov:Entity ;
+    pav:importedFrom ?endpoint ;
+    pav:retrievedOn ?now; # assuming download and transform are part of the same process
+    pav:lastUpdateOn ?dateModified . 
+}
+WHERE {
+  ?uri a tkb:Besluit ;
+    tkb:id ?id ;
+    tkb:agendapunt_id ?agendapunt_id ;
+    tkb:besluitsoort ?besluitsoort ;
+    tkb:besluittekst ?besluittekst ;
+    tkb:status ?status .
+       
+  OPTIONAL {
+    ?uri tkb:zaak [
+      tkz:id ?zaak_id;
+      tkz:onderwerp ?zaak_onderwerp
+      ] .
+  }
+  BIND( IRI( CONCAT( "BASE_URI","besluit/",?id ) ) as ?uri_besluit )
+  BIND( IRI( CONCAT( "BASE_URI","zaak/",?zaak_id ) ) as ?uri_zaak )
+  BIND( IRI( CONCAT( "BASE_URI","agendapunt/",?agendapunt_id ) ) as ?uri_agendapunt )
+  # define the ODATA-API endpoint URL
+  # TODO: document optional parameters used for accessing the ODATA-API 
+  BIND( CONCAT( "API_URL", "Besluit" ) as ?endpoint )
+
+  # create an URI for the prov:Entity
+  BIND( IRI( CONCAT( "BASE_URI","besluit/",?id,"#prov" ) ) as ?uri_prov )
+
+  ?uri tkb:apigewijzigdop ?gewijzigdop .
+  # set datatype to xsd:dateTime
+  BIND( STRDT( ?gewijzigdop, xsd:dateTime ) as ?dateModified )
+
+  # create a timpestamp for provenance information
+  BIND( NOW() as ?now )
+
+  # TODO: list unused properties from raw data
+}

@@ -3,3 +3,6 @@ package-lock.json
 data/*.json
 data/*.nt
 data/*.ttl
+data/*.txt
+data/*/*
+wip/
